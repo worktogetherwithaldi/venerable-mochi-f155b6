@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Sistem Quality Control (QC) Produksi</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --primary: #0f172a;
+      --primary-light: #1e293b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --ok: #16a34a;
+      --ok-bg: #dcfce7;
+      --ng: #dc2626;
+      --ng-bg: #fee2e2;
+      --pending: #d97706;
+      --pending-bg: #fef3c7;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 84px;
+    }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 13px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.02rem; font-weight: 700; letter-spacing: -0.01em; }
+    header p { font-size: 0.72rem; color: #94a3b8; }
+    .header-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .user-chip {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .role-tag {
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .role-admin { background: #38bdf8; color: #0f172a; }
+    .role-operator { background: #fbbf24; color: #0f172a; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: 0.15s ease;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-ok { background: var(--ok); color: #fff; }
+    .btn-ghost { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn-outline { background: #fff; border: 1px solid var(--border); color: var(--text); }
+    .btn-danger { background: var(--ng-bg); color: var(--ng); }
+    .btn-sm { padding: 5px 9px; font-size: 0.75rem; }
+
+    .container { max-width: 1020px; margin: 0 auto; padding: 14px; }
+
+    /* Login Screen */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 420px;
+      width: 100%;
+      padding: 26px 24px;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+    }
+    .login-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .login-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      background: var(--primary);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+    .pw-wrap { position: relative; }
+    .pw-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .demo-box {
+      margin-top: 18px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.78rem;
+    }
+    .demo-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .demo-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 640px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    .kpi-card {
+      background: var(--surface);
+      padding: 13px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .kpi-label { font-size: 0.74rem; color: var(--muted); font-weight: 600; }
+    .kpi-val { font-size: 1.35rem; font-weight: 800; margin-top: 2px; }
+
+    /* Toolbar & Explicit Search */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .search-group {
+      display: flex;
+      flex: 1;
+      min-width: 240px;
+      gap: 6px;
+    }
+    .input, select, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.87rem;
+      background: #fff;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .toolbar select { width: auto; min-width: 145px; }
+    .active-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 0.79rem;
+    }
+    .search-pill {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    /* Cards */
+    .card-list { display: grid; gap: 12px; }
+    .item-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .item-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+    .code-tag { font-size: 0.74rem; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+    .card-title { font-size: 1.02rem; font-weight: 700; color: var(--primary); }
+    .card-meta { font-size: 0.79rem; color: var(--muted); margin-top: 2px; }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-ok { background: var(--ok-bg); color: var(--ok); }
+    .badge-ng { background: var(--ng-bg); color: var(--ng); }
+    .badge-pending { background: var(--pending-bg); color: var(--pending); }
+    .badge-pdf { background: #ede9fe; color: #5b21b6; }
+
+    .progress-wrap { margin-top: 8px; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    .progress-bar { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--ok); transition: width 0.25s ease; }
+
+    .mini-stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      font-size: 0.75rem;
+    }
+    .mini-pill {
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-weight: 600;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    /* 5 Stages Pills */
+    .stage-pills {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+    @media (max-width: 720px) { .stage-pills { grid-template-columns: repeat(2, 1fr); } }
+    .stage-pill {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 0.72rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* PDF Section */
+    .pdf-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 15px;
+      margin-bottom: 14px;
+    }
+    .pdf-box-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .pdf-list { display: grid; gap: 8px; }
+    .pdf-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: #f8fafc;
+      flex-wrap: wrap;
+    }
+    .pdf-info { display: flex; align-items: center; gap: 9px; min-width: 200px; flex: 1; }
+    .pdf-icon {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-weight: 800;
+      font-size: 0.7rem;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+    .pdf-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .drop-zone {
+      border: 1.5px dashed #93c5fd;
+      background: #eff6ff;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.81rem;
+      color: #1e40af;
+    }
+
+    /* Detail & Stage Cards */
+    .detail-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px;
+      margin-bottom: 14px;
+    }
+    .stage-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .stage-header {
+      background: #f8fafc;
+      padding: 11px 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .stage-title { font-weight: 700; font-size: 0.94rem; color: var(--primary); }
+    .check-item {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .check-name { font-weight: 600; font-size: 0.89rem; }
+    .check-spec { font-size: 0.77rem; color: var(--muted); }
+    .check-time { font-size: 0.71rem; color: var(--muted); margin-top: 3px; }
+    .status-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    .status-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 0.77rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .status-btn.active-ok { background: var(--ok); color: #fff; border-color: var(--ok); }
+    .status-btn.active-ng { background: var(--ng); color: #fff; border-color: var(--ng); }
+    .status-btn.active-pending { background: var(--pending); color: #fff; border-color: var(--pending); }
+
+    .note-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    .note-input {
+      font-size: 0.81rem;
+      padding: 7px 10px;
+      background: #f8fafc;
+      flex: 1;
+    }
+    .photo-btn {
+      background: #eff6ff;
+      color: var(--accent);
+      border: 1px solid #bfdbfe;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Photo Thumbnails */
+    .photo-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 9px;
+    }
+    .photo-thumb-wrap {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .photo-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-dl {
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.82);
+      color: #fff;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .photo-del {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background: rgba(220, 38, 38, 0.9);
+      color: #fff;
+      border: none;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.68);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: var(--radius);
+      max-width: 480px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.24);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h3 { margin-bottom: 12px; font-size: 1.04rem; }
+    .form-group { margin-bottom: 11px; }
+    .form-group label { display: block; font-size: 0.79rem; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+
+    /* Lightbox & PDF Modal */
+    .lightbox-box {
+      background: #0f172a;
+      color: #fff;
+      border-radius: var(--radius);
+      max-width: 780px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 25px 40px rgba(0,0,0,0.5);
+    }
+    .lightbox-box img {
+      width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      background: #000;
+      display: block;
+    }
+    .lightbox-meta {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      flex-wrap: wrap;
+    }
+    .pdf-viewer-frame {
+      width: 100%;
+      height: 72vh;
+      border: none;
+      background: #334155;
+      display: block;
+    }
+
+    /* Toast Notification */
+    .toast-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 250;
+      max-width: 92vw;
+      text-align: center;
+      display: none;
+    }
+
+    /* Print */
+    .print-only { display: none; }
+    @media print {
+      header, .no-print, .status-group, .btn, .photo-btn, .photo-del, .photo-dl, .toast-banner { display: none !important; }
+      body { background: #fff; padding: 0; }
+      .container { max-width: 100%; padding: 0; }
+      .stage-card, .detail-header, .item-card, .pdf-box { border: 1px solid #cbd5e1; break-inside: avoid; }
+      .print-only { display: block !important; }
+      .note-input { border: none; background: transparent; padding: 2px 0; font-style: italic; }
+      .photo-thumb-wrap { width: 95px; height: 95px; }
+    }
+    .sign-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+      margin-top: 30px;
+      text-align: center;
+      font-size: 0.84rem;
+    }
+    .sign-box { border-top: 1px solid #334155; margin-top: 56px; padding-top: 6px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="toastBanner" class="toast-banner"></div>
+
+  <!-- Modal Project Baru -->
+  <div class="modal-backdrop" id="newProjectModal">
+    <div class="modal">
+      <h3>Tambah Project Baru</h3>
+      <div class="form-group">
+        <label>Kode / No. WO Project</label>
+        <input type="text" id="pCode" class="input" placeholder="PRJ-2026-003" />
+      </div>
+      <div class="form-group">
+        <label>Nama Project / Order</label>
+        <input type="text" id="pName" class="input" placeholder="Contoh: Rangka Conveyor Line B" />
+      </div>
+      <div class="form-group">
+        <label>Klien / Customer</label>
+        <input type="text" id="pClient" class="input" placeholder="Contoh: PT Maju Jaya Teknik" />
+      </div>
+      <div class="form-group">
+        <label>Inspektor QC Utama</label>
+        <input type="text" id="pInspector" class="input" placeholder="Contoh: Budi Santoso" />
+      </div>
+      <div class="form-group">
+        <label>Jumlah Unit Awal</label>
+        <input type="number" id="pUnitCount" class="input" value="1" min="1" max="100" />
+      </div>
+      <div class="form-group">
+        <label>Lampiran Dokumen PDF (Shop Drawing / BOM / SPK)</label>
+        <div class="drop-zone" onclick="document.getElementById('newProjPdfInput').click()"
+             ondragover="event.preventDefault()" ondrop="handleNewProjPdfDrop(event)">
+          Klik untuk pilih atau tarik file PDF ke sini (Bisa lebih dari 1 file)
+          <input type="file" id="newProjPdfInput" accept="application/pdf,.pdf" multiple style="display:none" onchange="handleNewProjPdfSelect(event)" />
+        </div>
+        <div id="stagedPdfList" style="margin-top:8px;display:grid;gap:6px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('newProjectModal')">Batal</button>
+        <button class="btn btn-accent" onclick="createProject()">Simpan Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah 1 Unit -->
+  <div class="modal-backdrop" id="newUnitModal">
+    <div class="modal">
+      <h3>Tambah Unit / Item Produk</h3>
+      <div class="form-group">
+        <label>Kode / No. Seri Unit</label>
+        <input type="text" id="uCode" class="input" placeholder="UNIT-03" />
+      </div>
+      <div class="form-group">
+        <label>Nama / Keterangan Unit</label>
+        <input type="text" id="uName" class="input" placeholder="Contoh: Frame Utama - Set #3" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('newUnitModal')">Batal</button>
+        <button class="btn btn-accent" onclick="createSingleUnit()">Tambah Unit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Batch Unit -->
+  <div class="modal-backdrop" id="batchUnitModal">
+    <div class="modal">
+      <h3>Generate Banyak Unit Sekaligus</h3>
+      <div class="form-group">
+        <label>Prefix Kode Unit</label>
+        <input type="text" id="bPrefix" class="input" value="UNIT-" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label>Mulai Nomor</label>
+          <input type="number" id="bStart" class="input" value="1" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Jumlah Unit</label>
+          <input type="number" id="bCount" class="input" value="5" min="1" max="100" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nama Dasar Unit</label>
+        <input type="text" id="bName" class="input" placeholder="Contoh: Bracket Heavy Duty" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('batchUnitModal')">Batal</button>
+        <button class="btn btn-accent" onclick="createBatchUnits()">Generate Unit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Parameter Checklist -->
+  <div class="modal-backdrop" id="newItemModal">
+    <div class="modal">
+      <h3>Tambah Parameter Pemeriksaan</h3>
+      <input type="hidden" id="itemStageKey" />
+      <div class="form-group">
+        <label>Parameter Pemeriksaan</label>
+        <input type="text" id="itemName" class="input" placeholder="Contoh: Uji kekencangan torsi baut M12" />
+      </div>
+      <div class="form-group">
+        <label>Standar / Toleransi</label>
+        <input type="text" id="itemSpec" class="input" placeholder="Contoh: 85 Nm sesuai spesifikasi" />
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <input type="checkbox" id="applyAllUnits" style="width:auto;" checked />
+        <label for="applyAllUnits" style="margin:0;color:var(--text);">Terapkan ke semua unit di project ini</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('newItemModal')">Batal</button>
+        <button class="btn btn-accent" onclick="addCheckItem()">Tambah</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Kelola Akun (Admin Only) -->
+  <div class="modal-backdrop" id="accountsModal">
+    <div class="modal">
+      <h3>Kelola Akun Pengguna</h3>
+      <div id="accountsList" style="display:grid;gap:8px;margin-bottom:14px;"></div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-weight:700;font-size:0.86rem;margin-bottom:8px;">Tambah Akun Baru</div>
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="accFullName" class="input" placeholder="Contoh: Rudi Hermawan" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="accUser" class="input" placeholder="rudi_qc" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="text" id="accPass" class="input" placeholder="Min. 4 karakter" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Peran (Role)</label>
+          <select id="accRole" class="input">
+            <option value="operator">Operator (Input & Penilaian QC)</option>
+            <option value="admin">Admin (Akses Penuh)</option>
+          </select>
+        </div>
+        <button class="btn btn-accent" style="width:100%;" onclick="addAccount()">+ Tambah Akun</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('accountsModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Foto Modal -->
+  <div class="modal-backdrop" id="lightboxModal" onclick="closeModal('lightboxModal')">
+    <div class="lightbox-box" onclick="event.stopPropagation()">
+      <img id="lbImg" src="" alt="Foto Bukti QC" />
+      <div class="lightbox-meta">
+        <div>
+          <div id="lbTitle" style="font-weight:700;"></div>
+          <div id="lbSub" style="font-size:0.75rem;color:#94a3b8;"></div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-accent btn-sm" id="lbDownloadBtn">Download Foto</button>
+          <button class="btn btn-outline btn-sm" onclick="closeModal('lightboxModal')">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Viewer & Simpan Modal (Kompatibel WebView APK) -->
+  <div class="modal-backdrop" id="pdfModal" onclick="closePdfModal()">
+    <div class="lightbox-box" style="max-width:860px;" onclick="event.stopPropagation()">
+      <div class="lightbox-meta" style="background:#1e293b;">
+        <div>
+          <div id="pdfModalTitle" style="font-weight:700;"></div>
+          <div id="pdfModalSub" style="font-size:0.74rem;color:#94a3b8;"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-accent btn-sm" id="pdfModalDownloadBtn">Download / Simpan PDF</button>
+          <button class="btn btn-outline btn-sm" id="pdfModalShareBtn" style="display:none;">Bagikan / Simpan ke HP</button>
+          <button class="btn btn-outline btn-sm" onclick="closePdfModal()">Tutup</button>
+        </div>
+      </div>
+      <iframe id="pdfViewerFrame" class="pdf-viewer-frame" src=""></iframe>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "qc_produksi_v5_projects";
+    const ACCOUNTS_KEY = "qc_produksi_v5_accounts";
+    const SESSION_KEY = "qc_produksi_v5_session";
+
+    const STAGES = [
+      { key: "cutting", label: "1. Hasil Cutting" },
+      { key: "machining", label: "2. Hasil Machining" },
+      { key: "assembling", label: "3. Hasil Assembling" },
+      { key: "sealant", label: "4. Sealant Kaca" },
+      { key: "ready", label: "5. Siap Kirim" }
+    ];
+
+    function uid() {
+      return Math.random().toString(36).substring(2, 10);
+    }
+
+    function nowStr() {
+      const d = new Date();
+      return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) +
+             " " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return "0 KB";
+      if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    function showToast(msg, duration = 3200) {
+      const el = document.getElementById("toastBanner");
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = "block";
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => { el.style.display = "none"; }, duration);
+    }
+
+    // Penyimpanan PDF Ganda (IndexedDB + Fallback localStorage agar aman di WebView APK / file://)
+    const IDB_NAME = "qc_produksi_files_db";
+    const IDB_STORE = "pdf_files";
+    const PDF_LS_PREFIX = "qc_pdf_data_";
+    const pdfMemoryFallback = {};
+
+    function openPdfDb() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) { resolve(null); return; }
+        try {
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE, { keyPath: "id" });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (err) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function savePdfBlobData(id, dataUrl) {
+      pdfMemoryFallback[id] = dataUrl;
+      try {
+        localStorage.setItem(PDF_LS_PREFIX + id, dataUrl);
+      } catch (e) {
+        // Lewati jika ukuran file melebihi kuota localStorage
+      }
+      const db = await openPdfDb();
+      if (!db) return;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(IDB_STORE, "readwrite");
+          tx.objectStore(IDB_STORE).put({ id, data: dataUrl });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        } catch (e) {
+          resolve(false);
+        }
+      });
+    }
+
+    async function getPdfBlobData(id) {
+      if (pdfMemoryFallback[id]) return pdfMemoryFallback[id];
+      try {
+        const fromLs = localStorage.getItem(PDF_LS_PREFIX + id);
+        if (fromLs) {
+          pdfMemoryFallback[id] = fromLs;
+          return fromLs;
+        }
+      } catch (e) {}
+      const db = await openPdfDb();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(IDB_STORE, "readonly");
+          const req = tx.objectStore(IDB_STORE).get(id);
+          req.onsuccess = () => {
+            const val = req.result ? req.result.data : null;
+            if (val) pdfMemoryFallback[id] = val;
+            resolve(val);
+          };
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function deletePdfBlobData(id) {
+      delete pdfMemoryFallback[id];
+      try { localStorage.removeItem(PDF_LS_PREFIX + id); } catch (e) {}
+      const db = await openPdfDb();
+      if (!db) return;
+      return new Promise((resolve) => {
+        try {
+          const tx = db.transaction(IDB_STORE, "readwrite");
+          tx.objectStore(IDB_STORE).delete(id);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        } catch (e) {
+          resolve(false);
+        }
+      });
+    }
+
+    function dataUrlToBlob(dataUrl, fallbackMime) {
+      const parts = dataUrl.split(",");
+      const byteString = atob(parts[1]);
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = fallbackMime || (mimeMatch ? mimeMatch[1] : "application/octet-stream");
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      return new Blob([ab], { type: mime });
+    }
+
+    // Download Universal yang Kompatibel dengan Generator HTML-to-APK (WebIntoApp / AppsGeyser) & Browser
+    async function triggerDownload(dataUrl, filename, mimeType) {
+      const mime = mimeType || "application/octet-stream";
+
+      if (window.AndroidDownloader && typeof window.AndroidDownloader.saveBase64File === "function") {
+        window.AndroidDownloader.saveBase64File(dataUrl, filename, mime);
+        return;
+      }
+
+      const blob = dataUrlToBlob(dataUrl, mime);
+      const isAndroidWebView = /Android/i.test(navigator.userAgent) && (/wv/i.test(navigator.userAgent) || /Version\/\d+\.\d+/i.test(navigator.userAgent));
+
+      if (isAndroidWebView) {
+        try {
+          const fileObj = new File([blob], filename, { type: mime });
+          if (navigator.canShare && navigator.canShare({ files: [fileObj] })) {
+            await navigator.share({
+              files: [fileObj],
+              title: filename
+            });
+            return;
+          }
+        } catch (shareErr) {}
+
+        showToast("Mengunduh " + filename + "...");
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast("File diunduh: " + filename);
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      } catch (e) {
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    }
+
+    // Fitur Cetak Rekap & Laporan Unit (Kompatibel APK WebView & Browser)
+    function triggerPrint() {
+      const isAndroidWebView = /Android/i.test(navigator.userAgent) && (/wv/i.test(navigator.userAgent) || /Version\/\d+\.\d+/i.test(navigator.userAgent));
+      
+      if (isAndroidWebView) {
+        const pilihan = confirm("Pencetakan langsung tidak didukung di dalam aplikasi APK.\n\nKlik OK untuk mengunduh laporan ini sebagai file HTML (bisa dibuka & dicetak via browser HP), atau Batal untuk membagikannya.");
+        if (pilihan) {
+          exportReportAsHtml();
+        } else {
+          shareReportAsText();
+        }
+      } else {
+        window.print();
+      }
+    }
+
+    function exportReportAsHtml() {
+      const appContent = document.getElementById("app");
+      if (!appContent) { alert("Tidak ada data laporan untuk dicetak."); return; }
+      
+      const htmlContent = `<!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="UTF-8">
+        <title>Laporan Quality Control Produksi</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; background: #fff; line-height: 1.5; }
+          h1, h2, h3 { color: #0f172a; }
+          .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+          .badge-ok { background: #dcfce7; color: #16a34a; }
+          .badge-ng { background: #fee2e2; color: #dc2626; }
+          .badge-pending { background: #fef3c7; color: #d97706; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 14px; }
+          th { background: #f8fafc; }
+          .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: center; }
+          .sign-box { border-top: 1px solid #334155; margin-top: 60px; padding-top: 5px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <h2 style="border-bottom: 2px solid #0f172a; padding-bottom: 8px;">LAPORAN QUALITY CONTROL PRODUKSI</h2>
+        ${appContent.innerHTML}
+        <div class="sign-grid">
+          <div>
+            <div>Diperiksa Oleh,</div>
+            <div class="sign-box">Inspektor Quality Control</div>
+          </div>
+          <div>
+            <div>Disetujui Oleh,</div>
+            <div class="sign-box">Kepala Produksi / QA Manager</div>
+          </div>
+        </div>
+      </body>
+      </html>`;
+
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Laporan_QC_" + new Date().toISOString().slice(0, 10) + ".html";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      showToast("Laporan berhasil diunduh ke folder Download.");
+    }
+
+    function shareReportAsText() {
+      const appContent = document.getElementById("app");
+      if (!appContent) return;
+      const textSummary = "LAPORAN QUALITY CONTROL PRODUKSI\n" + appContent.innerText.replace(/\s+/g, " ").substring(0, 1500) + "...";
+      
+      if (navigator.share) {
+        navigator.share({
+          title: "Laporan QC Produksi",
+          text: textSummary
+        }).catch(() => {});
+      } else {
+        alert("Fitur bagikan tidak tersedia pada perangkat ini.");
+      }
+    }
+
+    function defaultChecks() {
+      return {
+        cutting: [
+          { id: uid(), name: "Dimensi panjang & lebar potongan", spec: "Sesuai gambar kerja (±0.5 mm)", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Kerapian tepi potong (bebas burr/slag)", spec: "Halus, tidak tajam / berlebih", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Kesesuaian jenis & ketebalan material", spec: "Sesuai BOM / Mill Certificate", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] }
+        ],
+        machining: [
+          { id: uid(), name: "Akurasi lubang bor, ulir & chamfers", spec: "Toleransi ±0.1 mm, baut masuk lancar", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Kehalusan permukaan (Surface Finish)", spec: "Tidak ada goresan dalam / chatter", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Kesikuan & kerataan bidang", spec: "Deviasi maksimal 0.15 mm", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] }
+        ],
+        assembling: [
+          { id: uid(), name: "Kualitas sambungan baut/screw", spec: "Torsi baut/screw sesuai spesifikasi, tidak kendor atau dol", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Kelurusan (Alignment) & fungsi mekanis", spec: "Presisi, tidak macet saat diuji", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Finishing cat / coating", spec: "Merata, tidak mengelupas / belang", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] }
+        ],
+        sealant: [
+          { id: uid(), name: "Kerapian & kontinuitas aplikasi sealant", spec: "Alur sealant rata, penuh, dan tidak terputus", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Daya rekat & kebersihan area kaca/frame", spec: "Menempel kuat, bebas gelembung & noda berlebih", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Kekeringan (curing) & uji kedap air/udara", spec: "Kering sempurna dan lulus uji kebocoran", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] }
+        ],
+        ready: [
+          { id: uid(), name: "Kelengkapan unit, aksesoris & part cadangan", spec: "100% sesuai Packing List", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Label identitas, nameplate & dokumen QC", spec: "Terpasang jelas & surat jalan siap", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] },
+          { id: uid(), name: "Proteksi packaging / palleting aman", spec: "Terbungkus rapi tahan benturan", status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] }
+        ]
+      };
+    }
+
+    function makeUnit(code, name) {
+      return {
+        id: uid(),
+        code,
+        name,
+        createdAt: nowStr(),
+        checks: defaultChecks()
+      };
+    }
+
+    function migrateProjects(list) {
+      if (!Array.isArray(list)) return [];
+      list.forEach(p => {
+        if (!Array.isArray(p.pdfs)) p.pdfs = [];
+        if (!Array.isArray(p.units)) p.units = [];
+        p.units.forEach(u => {
+          if (!u.checks) u.checks = defaultChecks();
+          if (!Array.isArray(u.checks.sealant)) {
+            u.checks.sealant = defaultChecks().sealant;
+          }
+          if (Array.isArray(u.checks.assembling)) {
+            u.checks.assembling.forEach(item => {
+              if (item.name === "Kualitas pengelasan & sambungan baut") {
+                item.name = "Kualitas sambungan baut/screw";
+                item.spec = "Torsi baut/screw sesuai spesifikasi, tidak kendor atau dol";
+              }
+            });
+          }
+          STAGES.forEach(s => {
+            if (!Array.isArray(u.checks[s.key])) u.checks[s.key] = [];
+            u.checks[s.key].forEach(it => {
+              if (!Array.isArray(it.photos)) it.photos = [];
+            });
+          });
+        });
+      });
+      return list;
+    }
+
+    // Accounts & Session
+    const DEFAULT_ACCOUNTS = [
+      { id: "acc-admin", username: "admin", password: "admin123", name: "Administrator QC", role: "admin", isDefault: true },
+      { id: "acc-op", username: "operator", password: "operator123", name: "Operator Produksi", role: "operator", isDefault: true }
+    ];
+
+    let accounts = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "null") || DEFAULT_ACCOUNTS;
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+
+    let currentUser = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+
+    function isAdmin() {
+      return currentUser && currentUser.role === "admin";
+    }
+
+    let projects = migrateProjects(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
+    if (!projects.length) {
+      const u1 = makeUnit("UNIT-01", "Frame Mesin Packaging #1");
+      u1.checks.cutting.forEach(i => { i.status = "ok"; i.updatedAt = "16 Nov 2026 09:15"; i.inspectorName = "Administrator QC"; });
+      u1.checks.machining[0].status = "ok"; u1.checks.machining[0].updatedAt = "16 Nov 2026 10:40"; u1.checks.machining[0].inspectorName = "Operator Produksi";
+      u1.checks.machining[1].status = "ng"; u1.checks.machining[1].note = "Perlu polishing ulang di sisi kiri"; u1.checks.machining[1].updatedAt = "16 Nov 2026 11:05"; u1.checks.machining[1].inspectorName = "Operator Produksi";
+
+      const u2 = makeUnit("UNIT-02", "Frame Mesin Packaging #2");
+      Object.keys(u2.checks).forEach(k => u2.checks[k].forEach(i => { i.status = "ok"; i.updatedAt = "16 Nov 2026 13:20"; i.inspectorName = "Administrator QC"; }));
+
+      projects = [{
+        id: uid(),
+        code: "PRJ-2026-001",
+        name: "Frame Mesin Packaging Otomatis (2 Unit)",
+        client: "PT Nusantara Pangan",
+        inspector: "Andi Wijaya",
+        createdAt: "16 Nov 2026",
+        pdfs: [],
+        units: [u1, u2]
+      }];
+      save();
+    }
+
+    let state = {
+      projectId: null,
+      unitId: null,
+      projSearchDraft: "",
+      projSearchApplied: "",
+      projFilter: "all",
+      unitSearchDraft: "",
+      unitSearchApplied: "",
+      unitFilter: "all",
+      stagedPdfs: [],
+      activePdfBlobUrl: null
+    };
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      } catch (e) {
+        alert("Penyimpanan browser penuh! Silakan lakukan Backup JSON dan hapus foto lama.");
+      }
+    }
+
+    function evalUnit(u) {
+      let total = 0, ok = 0, ng = 0, pending = 0, photos = 0;
+      const stageStats = {};
+      STAGES.forEach(s => {
+        const items = u.checks[s.key] || [];
+        const sOk = items.filter(i => i.status === "ok").length;
+        const sNg = items.filter(i => i.status === "ng").length;
+        const sPend = items.filter(i => i.status === "pending").length;
+        items.forEach(i => { photos += (i.photos ? i.photos.length : 0); });
+        total += items.length;
+        ok += sOk;
+        ng += sNg;
+        pending += sPend;
+        stageStats[s.key] = { total: items.length, ok: sOk, ng: sNg, pending: sPend };
+      });
+      const pct = total ? Math.round((ok / total) * 100) : 0;
+      let status = "pending";
+      if (ng > 0) status = "ng";
+      else if (total > 0 && ok === total) status = "ok";
+      return { total, ok, ng, pending, pct, status, stageStats, photos };
+    }
+
+    function evalProject(p) {
+      const units = p.units || [];
+      let okUnits = 0, ngUnits = 0, pendUnits = 0;
+      units.forEach(u => {
+        const ev = evalUnit(u);
+        if (ev.status === "ok") okUnits++;
+        else if (ev.status === "ng") ngUnits++;
+        else pendUnits++;
+      });
+      const pct = units.length ? Math.round((okUnits / units.length) * 100) : 0;
+      let status = "pending";
+      if (ngUnits > 0) status = "ng";
+      else if (units.length > 0 && okUnits === units.length) status = "ok";
+      return { totalUnits: units.length, okUnits, ngUnits, pendUnits, pct, status };
+    }
+
+    function render() {
+      const root = document.getElementById("root");
+      if (!currentUser) {
+        renderLogin(root);
+        return;
+      }
+
+      const adminControls = isAdmin() ? `
+        <button class="btn btn-ghost btn-sm" onclick="openAccountsModal()">Kelola Akun</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportBackup()">Backup</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('restoreInput').click()">Restore</button>
+        <input type="file" id="restoreInput" accept=".json,application/json" style="display:none" onchange="importBackup(event)" />
+      ` : "";
+
+      root.innerHTML = `
+        <header>
+          <div>
+            <h1>Sistem Quality Control (QC) Produksi</h1>
+            <p>Cutting &bull; Machining &bull; Assembling &bull; Sealant Kaca &bull; Siap Kirim</p>
+          </div>
+          <div class="header-right">
+            <div class="user-chip">
+              <span>${esc(currentUser.name)}</span>
+              <span class="role-tag ${isAdmin() ? "role-admin" : "role-operator"}">${esc(currentUser.role)}</span>
+            </div>
+            ${adminControls}
+            <button class="btn btn-accent btn-sm" onclick="openNewProjectModal()">+ Project</button>
+            <button class="btn btn-ghost btn-sm" onclick="logout()">Keluar</button>
+          </div>
+        </header>
+        <div class="container" id="app"></div>
+      `;
+
+      const app = document.getElementById("app");
+      if (state.projectId) {
+        const p = projects.find(x => x.id === state.projectId);
+        if (!p) { state.projectId = null; state.unitId = null; renderDashboard(app); return; }
+        if (state.unitId) {
+          const u = p.units.find(x => x.id === state.unitId);
+          if (u) { renderUnitDetail(app, p, u); return; }
+          state.unitId = null;
+        }
+        renderProjectDetail(app, p);
+        return;
+      }
+      renderDashboard(app);
+    }
+
+    function renderLogin(root) {
+      root.innerHTML = `
+        <div class="login-wrap">
+          <div class="login-card">
+            <div class="login-brand">
+              <div class="login-logo">QC</div>
+              <div>
+                <h2 style="font-size:1.15rem;color:var(--primary);">Sistem Quality Control</h2>
+                <p style="font-size:0.78rem;color:var(--muted);">Masuk untuk mengelola inspeksi produksi</p>
+              </div>
+            </div>
+            <form onsubmit="handleLogin(event)">
+              <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="loginUser" class="input" placeholder="Masukkan username" required />
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <div class="pw-wrap">
+                  <input type="password" id="loginPass" class="input" placeholder="Masukkan password" required />
+                  <button type="button" class="pw-toggle" onclick="togglePw()">Lihat</button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-accent" style="width:100%;padding:11px;margin-top:4px;">Masuk ke Aplikasi</button>
+            </form>
+
+            <div class="demo-box">
+              <div style="font-weight:700;color:var(--primary);margin-bottom:6px;">Akun Bawaan Sistem:</div>
+              <div class="demo-row">
+                <div>
+                  <b>Admin</b> (Akses Penuh)<br/>
+                  <span style="color:var(--muted);">User: <code>admin</code> &bull; Pass: <code>admin123</code></span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="quickFill('admin','admin123')">Gunakan</button>
+              </div>
+              <div class="demo-row">
+                <div>
+                  <b>Operator</b> (Input &amp; Penilaian QC)<br/>
+                  <span style="color:var(--muted);">User: <code>operator</code> &bull; Pass: <code>operator123</code></span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="quickFill('operator','operator123')">Gunakan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePw() {
+      const inp = document.getElementById("loginPass");
+      const btn = inp.nextElementSibling;
+      if (inp.type === "password") { inp.type = "text"; btn.textContent = "Tutup"; }
+      else { inp.type = "password"; btn.textContent = "Lihat"; }
+    }
+
+    function quickFill(u, p) {
+      document.getElementById("loginUser").value = u;
+      document.getElementById("loginPass").value = p;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById("loginUser").value.trim();
+      const p = document.getElementById("loginPass").value;
+      const found = accounts.find(a => a.username === u && a.password === p);
+      if (!found) {
+        alert("Username atau password salah.");
+        return;
+      }
+      currentUser = { id: found.id, username: found.username, name: found.name, role: found.role };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+      render();
+    }
+
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem(SESSION_KEY);
+      state.projectId = null;
+      state.unitId = null;
+      render();
+    }
+
+    function applyProjSearch() {
+      state.projSearchApplied = state.projSearchDraft.trim();
+      render();
+    }
+
+    function resetProjSearch() {
+      state.projSearchDraft = "";
+      state.projSearchApplied = "";
+      render();
+    }
+
+    function applyUnitSearch() {
+      state.unitSearchApplied = state.unitSearchDraft.trim();
+      render();
+    }
+
+    function resetUnitSearch() {
+      state.unitSearchDraft = "";
+      state.unitSearchApplied = "";
+      render();
+    }
+
+    function renderDashboard(app) {
+      let totalUnits = 0, ngUnits = 0, okUnits = 0;
+      const mapped = projects.map(p => {
+        const ev = evalProject(p);
+        totalUnits += ev.totalUnits;
+        ngUnits += ev.ngUnits;
+        okUnits += ev.okUnits;
+        return { p, ev };
+      });
+
+      const filtered = mapped.filter(({ p, ev }) => {
+        const q = state.projSearchApplied.toLowerCase();
+        const mText = !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || p.client.toLowerCase().includes(q);
+        const mFilt = state.projFilter === "all" || ev.status === state.projFilter;
+        return mText && mFilt;
+      });
+
+      app.innerHTML = `
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Project</div>
+            <div class="kpi-val">${projects.length}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Unit Dicek</div>
+            <div class="kpi-val">${totalUnits}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Unit Rework (NG)</div>
+            <div class="kpi-val" style="color:var(--ng)">${ngUnits}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Unit Siap Kirim</div>
+            <div class="kpi-val" style="color:var(--ok)">${okUnits}</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-group">
+            <input class="input" placeholder="Ketik kode, nama project, atau klien lalu tekan Cari..."
+                   value="${esc(state.projSearchDraft)}"
+                   oninput="state.projSearchDraft=this.value;"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();applyProjSearch();}" />
+            <button class="btn btn-accent" onclick="applyProjSearch()">Cari</button>
+            ${state.projSearchApplied ? `<button class="btn btn-outline" onclick="resetProjSearch()">Reset</button>` : ""}
+          </div>
+          <select onchange="state.projFilter=this.value; render();">
+            <option value="all" ${state.projFilter==="all"?"selected":""}>Semua Project</option>
+            <option value="pending" ${state.projFilter==="pending"?"selected":""}>Proses QC</option>
+            <option value="ng" ${state.projFilter==="ng"?"selected":""}>Ada Unit NG</option>
+            <option value="ok" ${state.projFilter==="ok"?"selected":""}>Siap Kirim</option>
+          </select>
+        </div>
+
+        ${state.projSearchApplied ? `
+          <div class="active-search-bar">
+            <span class="search-pill">Hasil pencarian: "${esc(state.projSearchApplied)}" (${filtered.length} project)</span>
+          </div>
+        ` : ""}
+
+        <div class="card-list">
+          ${filtered.length === 0 ? `<div class="kpi-card" style="text-align:center;color:var(--muted);padding:30px;">Tidak ada project yang ditemukan. Klik <b>+ Project</b> untuk membuat baru.</div>` : ""}
+          ${filtered.map(({ p, ev }) => `
+            <div class="item-card" onclick="state.projectId='${p.id}'; state.unitSearchDraft=''; state.unitSearchApplied=''; render();">
+              <div class="card-top">
+                <div>
+                  <div class="code-tag">${esc(p.code)}</div>
+                  <div class="card-title">${esc(p.name)}</div>
+                  <div class="card-meta">Klien: ${esc(p.client)} &bull; QC: ${esc(p.inspector)}</div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+                  ${(p.pdfs && p.pdfs.length) ? `<span class="badge badge-pdf">PDF: ${p.pdfs.length} File</span>` : ""}
+                  ${badgeHtml(ev.status, true)}
+                </div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-info">
+                  <span>Kesiapan Unit Project</span>
+                  <span>${ev.okUnits}/${ev.totalUnits} Unit Siap Kirim (${ev.pct}%)</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${ev.pct}%"></div></div>
+              </div>
+              <div class="mini-stats">
+                <span class="mini-pill" style="color:var(--ok)">OK: ${ev.okUnits} Unit</span>
+                <span class="mini-pill" style="color:var(--ng)">NG: ${ev.ngUnits} Unit</span>
+                <span class="mini-pill" style="color:var(--pending)">Proses: ${ev.pendUnits} Unit</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderProjectDetail(app, p) {
+      const pev = evalProject(p);
+      const filteredUnits = (p.units || []).map(u => ({ u, ev: evalUnit(u) })).filter(({ u, ev }) => {
+        const q = state.unitSearchApplied.toLowerCase();
+        const mText = !q || u.code.toLowerCase().includes(q) || u.name.toLowerCase().includes(q);
+        const mFilt = state.unitFilter === "all" || ev.status === state.unitFilter;
+        return mText && mFilt;
+      });
+
+      const pdfs = p.pdfs || [];
+
+      app.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;" class="no-print">
+          <button class="btn btn-outline" onclick="state.projectId=null; render();">&larr; Daftar Project</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline" onclick="triggerPrint()">Cetak Rekap</button>
+            ${isAdmin() ? `<button class="btn btn-danger" onclick="deleteProject('${p.id}')">Hapus Project</button>` : ""}
+          </div>
+        </div>
+
+        <div class="detail-header">
+          <div class="card-top">
+            <div>
+              <div class="code-tag">${esc(p.code)} &bull; ${esc(p.createdAt)}</div>
+              <div class="card-title" style="font-size:1.2rem;">${esc(p.name)}</div>
+              <div class="card-meta">Klien: <b>${esc(p.client)}</b> &bull; Inspektor QC: <b>${esc(p.inspector)}</b></div>
+            </div>
+            ${badgeHtml(pev.status, true)}
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-info">
+              <span>Progres Unit Lolos QC</span>
+              <span>${pev.okUnits} dari ${pev.totalUnits} Unit Siap Kirim (${pev.pct}%)</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pev.pct}%"></div></div>
+          </div>
+        </div>
+
+        <!-- Dokumen Project (PDF) -->
+        <div class="pdf-box">
+          <div class="pdf-box-head">
+            <div>
+              <div style="font-weight:700;font-size:0.92rem;">Dokumen Project (PDF)</div>
+              <div style="font-size:0.74rem;color:var(--muted);">Gambar kerja, spesifikasi teknis, BOM, atau SPK</div>
+            </div>
+            <label class="btn btn-outline btn-sm no-print">
+              + Upload PDF
+              <input type="file" accept="application/pdf,.pdf" multiple style="display:none" onchange="uploadProjectPdfs(event,'${p.id}')" />
+            </label>
+          </div>
+          ${pdfs.length === 0 ? `<div style="font-size:0.8rem;color:var(--muted);padding:6px 0;">Belum ada dokumen PDF terlampir pada project ini.</div>` : `
+            <div class="pdf-list">
+              ${pdfs.map(doc => `
+                <div class="pdf-row">
+                  <div class="pdf-info">
+                    <span class="pdf-icon">PDF</span>
+                    <div>
+                      <div style="font-weight:600;font-size:0.84rem;word-break:break-all;">${esc(doc.name)}</div>
+                      <div style="font-size:0.72rem;color:var(--muted);">${formatBytes(doc.size)} &bull; Diunggah: ${esc(doc.uploadedAt)} (${esc(doc.uploadedBy || "-")})</div>
+                    </div>
+                  </div>
+                  <div class="pdf-actions no-print">
+                    <button class="btn btn-outline btn-sm" onclick="previewProjectPdf('${p.id}','${doc.id}')">Lihat</button>
+                    <button class="btn btn-accent btn-sm" onclick="downloadProjectPdf('${p.id}','${doc.id}')">Download</button>
+                    ${isAdmin() ? `<button class="btn btn-danger btn-sm" onclick="deleteProjectPdf('${p.id}','${doc.id}')">Hapus</button>` : ""}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `}
+        </div>
+
+        <div class="toolbar no-print">
+          <div class="search-group">
+            <input class="input" placeholder="Ketik no. seri / nama unit lalu tekan Cari..."
+                   value="${esc(state.unitSearchDraft)}"
+                   oninput="state.unitSearchDraft=this.value;"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();applyUnitSearch();}" />
+            <button class="btn btn-accent" onclick="applyUnitSearch()">Cari</button>
+            ${state.unitSearchApplied ? `<button class="btn btn-outline" onclick="resetUnitSearch()">Reset</button>` : ""}
+          </div>
+          <select onchange="state.unitFilter=this.value; render();">
+            <option value="all" ${state.unitFilter==="all"?"selected":""}>Semua Unit (${p.units.length})</option>
+            <option value="pending" ${state.unitFilter==="pending"?"selected":""}>Proses QC</option>
+            <option value="ng" ${state.unitFilter==="ng"?"selected":""}>Perlu Rework (NG)</option>
+            <option value="ok" ${state.unitFilter==="ok"?"selected":""}>Siap Kirim</option>
+          </select>
+          <button class="btn btn-outline" onclick="openBatchModal()">+ Batch Unit</button>
+          <button class="btn btn-accent" onclick="openNewUnitModal()">+ 1 Unit</button>
+        </div>
+
+        ${state.unitSearchApplied ? `
+          <div class="active-search-bar">
+            <span class="search-pill">Hasil pencarian unit: "${esc(state.unitSearchApplied)}" (${filteredUnits.length} unit)</span>
+          </div>
+        ` : ""}
+
+        <div class="card-list">
+          ${filteredUnits.length === 0 ? `<div class="kpi-card" style="text-align:center;color:var(--muted);padding:28px;">Tidak ada unit yang cocok. Klik <b>+ 1 Unit</b> atau <b>+ Batch Unit</b>.</div>` : ""}
+          ${filteredUnits.map(({ u, ev }) => `
+            <div class="item-card" onclick="state.unitId='${u.id}'; render();">
+              <div class="card-top">
+                <div>
+                  <div class="code-tag">${esc(u.code)}</div>
+                  <div class="card-title">${esc(u.name)}</div>
+                  <div class="card-meta">Dibuat: ${esc(u.createdAt)} &bull; Foto Bukti: <b>${ev.photos}</b></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  ${badgeHtml(ev.status, false)}
+                  <button class="btn btn-outline btn-sm no-print" onclick="event.stopPropagation(); duplicateUnit('${p.id}','${u.id}')">Duplikat</button>
+                </div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-info">
+                  <span>Kelulusan Item QC Unit (5 Tahap)</span>
+                  <span>${ev.ok}/${ev.total} Item (${ev.pct}%)</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${ev.pct}%"></div></div>
+              </div>
+              <div class="stage-pills">
+                ${STAGES.map(s => {
+                  const st = ev.stageStats[s.key];
+                  const col = st.ng > 0 ? "var(--ng)" : (st.total > 0 && st.ok === st.total ? "var(--ok)" : "var(--muted)");
+                  return `<div class="stage-pill">
+                    <span>${s.label.replace(/^\d+\.\s*/, "")}</span>
+                    <b style="color:${col}">${st.ok}/${st.total}</b>
+                  </div>`;
+                }).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderUnitDetail(app, p, u) {
+      const ev = evalUnit(u);
+      app.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;" class="no-print">
+          <button class="btn btn-outline" onclick="state.unitId=null; render();">&larr; Daftar Unit (${esc(p.code)})</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline" onclick="triggerPrint()">Cetak Laporan Unit</button>
+            ${isAdmin() ? `<button class="btn btn-danger" onclick="deleteUnit('${p.id}','${u.id}')">Hapus Unit</button>` : ""}
+          </div>
+        </div>
+
+        <div class="detail-header">
+          <div class="card-top">
+            <div>
+              <div class="code-tag">${esc(p.code)} &bull; ${esc(u.code)}</div>
+              <div class="card-title" style="font-size:1.2rem;">${esc(u.name)}</div>
+              <div class="card-meta">Project: <b>${esc(p.name)}</b> &bull; Klien: <b>${esc(p.client)}</b> &bull; QC: <b>${esc(p.inspector)}</b></div>
+            </div>
+            ${badgeHtml(ev.status, false)}
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-info">
+              <span>Progres Pemeriksaan Unit</span>
+              <span>${ev.ok} OK &bull; ${ev.ng} NG &bull; ${ev.pending} Pending (${ev.pct}%)</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${ev.pct}%"></div></div>
+          </div>
+        </div>
+
+        ${STAGES.map(s => {
+          const items = u.checks[s.key] || [];
+          const st = ev.stageStats[s.key];
+          return `
+            <div class="stage-card">
+              <div class="stage-header">
+                <div>
+                  <div class="stage-title">${s.label}</div>
+                  <div style="font-size:0.74rem;color:var(--muted);">Lolos: ${st.ok} dari ${st.total} parameter</div>
+                </div>
+                <div style="display:flex;gap:6px;" class="no-print">
+                  <button class="btn btn-outline btn-sm" style="color:var(--ok);border-color:#bbf7d0;" onclick="markStageAllOk('${p.id}','${u.id}','${s.key}')">&#10003; Semua OK</button>
+                  ${isAdmin() ? `<button class="btn btn-outline btn-sm" onclick="openNewItemModal('${s.key}')">+ Parameter</button>` : ""}
+                </div>
+              </div>
+              <div>
+                ${items.map(item => `
+                  <div class="check-item">
+                    <div class="check-row">
+                      <div style="flex:1;min-width:190px;">
+                        <div class="check-name">${esc(item.name)}</div>
+                        <div class="check-spec">Standar: ${esc(item.spec)}</div>
+                        ${item.updatedAt ? `<div class="check-time">Diperiksa: ${esc(item.updatedAt)} ${item.inspectorName ? "oleh <b>" + esc(item.inspectorName) + "</b>" : ""}</div>` : ""}
+                      </div>
+                      <div class="status-group">
+                        <button class="status-btn ${item.status==="ok"?"active-ok":""}" onclick="setStatus('${p.id}','${u.id}','${s.key}','${item.id}','ok')">OK</button>
+                        <button class="status-btn ${item.status==="ng"?"active-ng":""}" onclick="setStatus('${p.id}','${u.id}','${s.key}','${item.id}','ng')">NG</button>
+                        <button class="status-btn ${item.status==="pending"?"active-pending":""}" onclick="setStatus('${p.id}','${u.id}','${s.key}','${item.id}','pending')">Pending</button>
+                        ${isAdmin() ? `<button class="status-btn" style="color:var(--ng);" onclick="deleteCheckItem('${p.id}','${u.id}','${s.key}','${item.id}')" title="Hapus Parameter">&times;</button>` : ""}
+                      </div>
+                    </div>
+
+                    <div class="note-row">
+                      <input class="input note-input" placeholder="Catatan pemeriksaan / keterangan rework..." value="${esc(item.note || "")}" onchange="setNote('${p.id}','${u.id}','${s.key}','${item.id}',this.value)" />
+                      <label class="photo-btn no-print">
+                        + Foto
+                        <input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotos(event,'${p.id}','${u.id}','${s.key}','${item.id}')" />
+                      </label>
+                    </div>
+
+                    ${(item.photos && item.photos.length > 0) ? `
+                      <div class="photo-grid">
+                        ${item.photos.map((ph, idx) => {
+                          const dlName = `QC_${safeFile(p.code)}_${safeFile(u.code)}_${s.key}_${idx + 1}.jpg`;
+                          return `
+                            <div class="photo-thumb-wrap" onclick="openLightbox('${esc(s.label)}','${esc(item.name)}','${esc(ph.time || "")}','${ph.data}','${dlName}')">
+                              <img src="${ph.data}" alt="Bukti QC" />
+                              <button class="photo-dl no-print" onclick="event.stopPropagation(); triggerDownload('${ph.data}','${dlName}','image/jpeg')" title="Download Foto">&#11015;</button>
+                              <button class="photo-del no-print" onclick="event.stopPropagation(); deletePhoto('${p.id}','${u.id}','${s.key}','${item.id}',${idx})" title="Hapus Foto">&times;</button>
+                            </div>
+                          `;
+                        }).join("")}
+                      </div>
+                    ` : ""}
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        }).join("")}
+
+        <div class="print-only">
+          <div class="sign-grid">
+            <div>
+              <div>Diperiksa Oleh,</div>
+              <div class="sign-box">${esc(p.inspector)}<br/><span style="font-weight:400;font-size:0.74rem;">Inspektor Quality Control</span></div>
+            </div>
+            <div>
+              <div>Disetujui Oleh,</div>
+              <div class="sign-box">Kepala Produksi / QA Manager</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function safeFile(str) {
+      return String(str || "item").replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function badgeHtml(status, isProject) {
+      if (status === "ok") return `<span class="badge badge-ok">${isProject ? "PROJECT SIAP KIRIM" : "UNIT SIAP KIRIM"}</span>`;
+      if (status === "ng") return `<span class="badge badge-ng">PERLU REWORK (NG)</span>`;
+      return `<span class="badge badge-pending">PROSES QC</span>`;
+    }
+
+    function setStatus(pid, uidVal, stageKey, itemId, status) {
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      const item = u && u.checks[stageKey].find(i => i.id === itemId);
+      if (!item) return;
+      item.status = status;
+      item.updatedAt = nowStr();
+      item.inspectorName = currentUser ? currentUser.name : "";
+      save();
+      render();
+    }
+
+    function markStageAllOk(pid, uidVal, stageKey) {
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      if (!u) return;
+      const ts = nowStr();
+      const insp = currentUser ? currentUser.name : "";
+      (u.checks[stageKey] || []).forEach(item => {
+        item.status = "ok";
+        item.updatedAt = ts;
+        item.inspectorName = insp;
+      });
+      save();
+      render();
+    }
+
+    function setNote(pid, uidVal, stageKey, itemId, note) {
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      const item = u && u.checks[stageKey].find(i => i.id === itemId);
+      if (!item) return;
+      item.note = note;
+      save();
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = 800;
+            let w = img.width, h = img.height;
+            if (w > maxW) {
+              h = Math.round((h * maxW) / w);
+              w = maxW;
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", 0.72));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handlePhotos(event, pid, uidVal, stageKey, itemId) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      const item = u && u.checks[stageKey].find(i => i.id === itemId);
+      if (!item) return;
+      if (!item.photos) item.photos = [];
+      for (const f of files) {
+        const dataUrl = await compressImage(f);
+        item.photos.push({ data: dataUrl, time: nowStr() });
+      }
+      if (!item.updatedAt) {
+        item.updatedAt = nowStr();
+        item.inspectorName = currentUser ? currentUser.name : "";
+      }
+      save();
+      render();
+    }
+
+    function deletePhoto(pid, uidVal, stageKey, itemId, idx) {
+      if (!confirm("Hapus foto bukti ini?")) return;
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      const item = u && u.checks[stageKey].find(i => i.id === itemId);
+      if (!item || !item.photos) return;
+      item.photos.splice(idx, 1);
+      save();
+      render();
+    }
+
+    function openLightbox(stage, name, time, src, dlFilename) {
+      document.getElementById("lbImg").src = src;
+      document.getElementById("lbTitle").textContent = name;
+      document.getElementById("lbSub").textContent = stage + (time ? " • Diunggah: " + time : "");
+      const dlBtn = document.getElementById("lbDownloadBtn");
+      dlBtn.onclick = () => triggerDownload(src, dlFilename || "bukti_qc.jpg", "image/jpeg");
+      document.getElementById("lightboxModal").classList.add("open");
+    }
+
+    // PDF Handling
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function stagePdfFiles(files) {
+      for (const f of files) {
+        if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
+          alert(`File "${f.name}" bukan PDF dan dilewati.`);
+          continue;
+        }
+        const dataUrl = await readFileAsDataUrl(f);
+        state.stagedPdfs.push({
+          id: "pdf-" + uid(),
+          name: f.name,
+          size: f.size,
+          dataUrl
+        });
+      }
+      renderStagedPdfs();
+    }
+
+    function handleNewProjPdfSelect(e) {
+      stagePdfFiles(Array.from(e.target.files || []));
+      e.target.value = "";
+    }
+
+    function handleNewProjPdfDrop(e) {
+      e.preventDefault();
+      stagePdfFiles(Array.from(e.dataTransfer.files || []));
+    }
+
+    function removeStagedPdf(idx) {
+      state.stagedPdfs.splice(idx, 1);
+      renderStagedPdfs();
+    }
+
+    function renderStagedPdfs() {
+      const box = document.getElementById("stagedPdfList");
+      if (!box) return;
+      box.innerHTML = state.stagedPdfs.map((doc, idx) => `
+        <div class="pdf-row" style="padding:6px 10px;">
+          <div class="pdf-info">
+            <span class="pdf-icon">PDF</span>
+            <div style="font-size:0.8rem;">
+              <b>${esc(doc.name)}</b> <span style="color:var(--muted);">(${formatBytes(doc.size)})</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeStagedPdf(${idx})">&times;</button>
+        </div>
+      `).join("");
+    }
+
+    async function uploadProjectPdfs(event, pid) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      const p = projects.find(x => x.id === pid);
+      if (!p) return;
+      if (!Array.isArray(p.pdfs)) p.pdfs = [];
+      for (const f of files) {
+        if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) continue;
+        const id = "pdf-" + uid();
+        const dataUrl = await readFileAsDataUrl(f);
+        await savePdfBlobData(id, dataUrl);
+        p.pdfs.push({
+          id,
+          name: f.name,
+          size: f.size,
+          uploadedAt: nowStr(),
+          uploadedBy: currentUser ? currentUser.name : "-"
+        });
+      }
+      save();
+      render();
+      showToast("Dokumen PDF berhasil diunggah.");
+      event.target.value = "";
+    }
+
+    async function previewProjectPdf(pid, docId) {
+      const p = projects.find(x => x.id === pid);
+      const doc = p && (p.pdfs || []).find(d => d.id === docId);
+      if (!doc) return;
+      const dataUrl = await getPdfBlobData(docId);
+      if (!dataUrl) {
+        alert("Data file PDF tidak ditemukan di penyimpanan lokal.");
+        return;
+      }
+      if (state.activePdfBlobUrl) URL.revokeObjectURL(state.activePdfBlobUrl);
+      const blob = dataUrlToBlob(dataUrl, "application/pdf");
+      state.activePdfBlobUrl = URL.createObjectURL(blob);
+
+      document.getElementById("pdfModalTitle").textContent = doc.name;
+      document.getElementById("pdfModalSub").textContent = `${formatBytes(doc.size)} • Diunggah: ${doc.uploadedAt}`;
+      document.getElementById("pdfModalDownloadBtn").onclick = () => triggerDownload(dataUrl, doc.name, "application/pdf");
+
+      const shareBtn = document.getElementById("pdfModalShareBtn");
+      const fileObj = new File([blob], doc.name, { type: "application/pdf" });
+      if (navigator.canShare && navigator.canShare({ files: [fileObj] })) {
+        shareBtn.style.display = "inline-flex";
+        shareBtn.onclick = () => navigator.share({ files: [fileObj], title: doc.name }).catch(() => {});
+      } else {
+        shareBtn.style.display = "none";
+      }
+
+      document.getElementById("pdfViewerFrame").src = state.activePdfBlobUrl;
+      document.getElementById("pdfModal").classList.add("open");
+    }
+
+    function closePdfModal() {
+      document.getElementById("pdfViewerFrame").src = "";
+      if (state.activePdfBlobUrl) {
+        URL.revokeObjectURL(state.activePdfBlobUrl);
+        state.activePdfBlobUrl = null;
+      }
+      closeModal("pdfModal");
+    }
+
+    async function downloadProjectPdf(pid, docId) {
+      const p = projects.find(x => x.id === pid);
+      const doc = p && (p.pdfs || []).find(d => d.id === docId);
+      if (!doc) return;
+      const dataUrl = await getPdfBlobData(docId);
+      if (!dataUrl) {
+        alert("Data file PDF tidak ditemukan di penyimpanan lokal.");
+        return;
+      }
+      await triggerDownload(dataUrl, doc.name, "application/pdf");
+    }
+
+    async function deleteProjectPdf(pid, docId) {
+      if (!isAdmin()) return;
+      if (!confirm("Hapus dokumen PDF ini dari project?")) return;
+      const p = projects.find(x => x.id === pid);
+      if (!p) return;
+      p.pdfs = (p.pdfs || []).filter(d => d.id !== docId);
+      await deletePdfBlobData(docId);
+      save();
+      render();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+
+    function openNewProjectModal() {
+      document.getElementById("pCode").value = "PRJ-2026-00" + (projects.length + 1);
+      document.getElementById("pName").value = "";
+      document.getElementById("pClient").value = "";
+      document.getElementById("pInspector").value = currentUser ? currentUser.name : "";
+      document.getElementById("pUnitCount").value = "1";
+      state.stagedPdfs = [];
+      renderStagedPdfs();
+      document.getElementById("newProjectModal").classList.add("open");
+    }
+
+    async function createProject() {
+      const code = document.getElementById("pCode").value.trim() || ("PRJ-" + (projects.length + 1));
+      const name = document.getElementById("pName").value.trim();
+      const client = document.getElementById("pClient").value.trim() || "-";
+      const inspector = document.getElementById("pInspector").value.trim() || "QC Staff";
+      const count = Math.max(1, Math.min(100, parseInt(document.getElementById("pUnitCount").value || "1", 10)));
+      if (!name) { alert("Nama project wajib diisi."); return; }
+
+      const pdfMeta = [];
+      for (const sp of state.stagedPdfs) {
+        await savePdfBlobData(sp.id, sp.dataUrl);
+        pdfMeta.push({
+          id: sp.id,
+          name: sp.name,
+          size: sp.size,
+          uploadedAt: nowStr(),
+          uploadedBy: currentUser ? currentUser.name : "-"
+        });
+      }
+
+      const units = [];
+      for (let i = 1; i <= count; i++) {
+        const num = String(i).padStart(2, "0");
+        units.push(makeUnit("UNIT-" + num, name + " #" + num));
+      }
+
+      const newP = {
+        id: uid(),
+        code,
+        name,
+        client,
+        inspector,
+        createdAt: new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
+        pdfs: pdfMeta,
+        units
+      };
+      projects.unshift(newP);
+      save();
+      state.stagedPdfs = [];
+      closeModal("newProjectModal");
+      state.projectId = newP.id;
+      state.unitId = count === 1 ? units[0].id : null;
+      render();
+    }
+
+    async function deleteProject(pid) {
+      if (!isAdmin()) return;
+      if (!confirm("Hapus seluruh project beserta semua unit dan dokumen di dalamnya?")) return;
+      const p = projects.find(x => x.id === pid);
+      if (p && p.pdfs) {
+        for (const doc of p.pdfs) await deletePdfBlobData(doc.id);
+      }
+      projects = projects.filter(x => x.id !== pid);
+      save();
+      state.projectId = null;
+      state.unitId = null;
+      render();
+    }
+
+    function openNewUnitModal() {
+      const p = projects.find(x => x.id === state.projectId);
+      const nextNum = String((p ? p.units.length : 0) + 1).padStart(2, "0");
+      document.getElementById("uCode").value = "UNIT-" + nextNum;
+      document.getElementById("uName").value = p ? (p.name + " #" + nextNum) : "";
+      document.getElementById("newUnitModal").classList.add("open");
+    }
+
+    function createSingleUnit() {
+      const p = projects.find(x => x.id === state.projectId);
+      if (!p) return;
+      const code = document.getElementById("uCode").value.trim() || ("UNIT-" + (p.units.length + 1));
+      const name = document.getElementById("uName").value.trim();
+      if (!name) { alert("Nama unit wajib diisi."); return; }
+      const u = makeUnit(code, name);
+      p.units.push(u);
+      save();
+      closeModal("newUnitModal");
+      state.unitId = u.id;
+      render();
+    }
+
+    function openBatchModal() {
+      const p = projects.find(x => x.id === state.projectId);
+      document.getElementById("bPrefix").value = "UNIT-";
+      document.getElementById("bStart").value = (p ? p.units.length : 0) + 1;
+      document.getElementById("bCount").value = 5;
+      document.getElementById("bName").value = p ? p.name : "Unit Produk";
+      document.getElementById("batchUnitModal").classList.add("open");
+    }
+
+    function createBatchUnits() {
+      const p = projects.find(x => x.id === state.projectId);
+      if (!p) return;
+      const prefix = document.getElementById("bPrefix").value.trim() || "UNIT-";
+      const start = Math.max(1, parseInt(document.getElementById("bStart").value || "1", 10));
+      const count = Math.max(1, Math.min(100, parseInt(document.getElementById("bCount").value || "5", 10)));
+      const baseName = document.getElementById("bName").value.trim() || p.name;
+
+      for (let i = 0; i < count; i++) {
+        const num = String(start + i).padStart(2, "0");
+        p.units.push(makeUnit(prefix + num, baseName + " #" + num));
+      }
+      save();
+      closeModal("batchUnitModal");
+      render();
+    }
+
+    function duplicateUnit(pid, uidVal) {
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      if (!u) return;
+      const nextNum = String(p.units.length + 1).padStart(2, "0");
+      const copyChecks = {};
+      STAGES.forEach(s => {
+        copyChecks[s.key] = (u.checks[s.key] || []).map(item => ({
+          id: uid(),
+          name: item.name,
+          spec: item.spec,
+          status: "pending",
+          note: "",
+          updatedAt: "",
+          inspectorName: "",
+          photos: []
+        }));
+      });
+      p.units.push({
+        id: uid(),
+        code: "UNIT-" + nextNum,
+        name: u.name + " (Copy)",
+        createdAt: nowStr(),
+        checks: copyChecks
+      });
+      save();
+      render();
+    }
+
+    function deleteUnit(pid, uidVal) {
+      if (!isAdmin()) return;
+      if (!confirm("Hapus unit ini dari project?")) return;
+      const p = projects.find(x => x.id === pid);
+      if (!p) return;
+      p.units = p.units.filter(x => x.id !== uidVal);
+      save();
+      state.unitId = null;
+      render();
+    }
+
+    function openNewItemModal(stageKey) {
+      if (!isAdmin()) return;
+      document.getElementById("itemStageKey").value = stageKey;
+      document.getElementById("itemName").value = "";
+      document.getElementById("itemSpec").value = "";
+      document.getElementById("applyAllUnits").checked = true;
+      document.getElementById("newItemModal").classList.add("open");
+    }
+
+    function addCheckItem() {
+      if (!isAdmin()) return;
+      const stageKey = document.getElementById("itemStageKey").value;
+      const name = document.getElementById("itemName").value.trim();
+      const spec = document.getElementById("itemSpec").value.trim() || "Sesuai standar QC";
+      const applyAll = document.getElementById("applyAllUnits").checked;
+      if (!name) { alert("Parameter pemeriksaan wajib diisi."); return; }
+
+      const p = projects.find(x => x.id === state.projectId);
+      if (!p) return;
+      const targetUnits = applyAll ? p.units : p.units.filter(x => x.id === state.unitId);
+      targetUnits.forEach(u => {
+        u.checks[stageKey].push({ id: uid(), name, spec, status: "pending", note: "", updatedAt: "", inspectorName: "", photos: [] });
+      });
+      save();
+      closeModal("newItemModal");
+      render();
+    }
+
+    function deleteCheckItem(pid, uidVal, stageKey, itemId) {
+      if (!isAdmin()) return;
+      if (!confirm("Hapus parameter pemeriksaan ini?")) return;
+      const p = projects.find(x => x.id === pid);
+      const u = p && p.units.find(x => x.id === uidVal);
+      if (!u) return;
+      u.checks[stageKey] = u.checks[stageKey].filter(i => i.id !== itemId);
+      save();
+      render();
+    }
+
+    // Account Management (Admin)
+    function openAccountsModal() {
+      if (!isAdmin()) return;
+      renderAccountsList();
+      document.getElementById("accountsModal").classList.add("open");
+    }
+
+    function renderAccountsList() {
+      const box = document.getElementById("accountsList");
+      box.innerHTML = accounts.map(acc => `
+        <div class="pdf-row">
+          <div>
+            <div style="font-weight:700;font-size:0.84rem;">${esc(acc.name)} <span class="role-tag ${acc.role==="admin"?"role-admin":"role-operator"}">${acc.role}</span></div>
+            <div style="font-size:0.74rem;color:var(--muted);">User: <code>${esc(acc.username)}</code> &bull; Pass: <code>${esc(acc.password)}</code></div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline btn-sm" onclick="changeAccPassword('${acc.id}')">Ubah Pass</button>
+            ${!acc.isDefault ? `<button class="btn btn-danger btn-sm" onclick="deleteAccount('${acc.id}')">Hapus</button>` : ""}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function addAccount() {
+      if (!isAdmin()) return;
+      const name = document.getElementById("accFullName").value.trim();
+      const username = document.getElementById("accUser").value.trim();
+      const password = document.getElementById("accPass").value.trim();
+      const role = document.getElementById("accRole").value;
+      if (!name || !username || !password) { alert("Semua kolom akun wajib diisi."); return; }
+      if (accounts.some(a => a.username === username)) { alert("Username sudah digunakan."); return; }
+      accounts.push({ id: "acc-" + uid(), name, username, password, role, isDefault: false });
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+      document.getElementById("accFullName").value = "";
+      document.getElementById("accUser").value = "";
+      document.getElementById("accPass").value = "";
+      renderAccountsList();
+    }
+
+    function changeAccPassword(id) {
+      const acc = accounts.find(a => a.id === id);
+      if (!acc) return;
+      const np = prompt(`Masukkan password baru untuk ${acc.username}:`, acc.password);
+      if (!np || !np.trim()) return;
+      acc.password = np.trim();
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+      renderAccountsList();
+    }
+
+    function deleteAccount(id) {
+      if (!confirm("Hapus akun ini?")) return;
+      accounts = accounts.filter(a => a.id !== id);
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+      renderAccountsList();
+    }
+
+    // Backup & Restore JSON (termasuk PDF IndexedDB)
+    async function exportBackup() {
+      if (!isAdmin()) return;
+      const pdfBlobs = {};
+      for (const p of projects) {
+        for (const doc of (p.pdfs || [])) {
+          const data = await getPdfBlobData(doc.id);
+          if (data) pdfBlobs[doc.id] = data;
+        }
+      }
+      const payload = {
+        version: "v5",
+        exportedAt: nowStr(),
+        projects,
+        pdfBlobs
+      };
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const dataUrl = "data:application/json;charset=utf-8," + encodeURIComponent(jsonStr);
+      const filename = "backup_qc_lengkap_" + new Date().toISOString().slice(0, 10) + ".json";
+      if (window.AndroidDownloader && typeof window.AndroidDownloader.saveTextFile === "function") {
+        window.AndroidDownloader.saveTextFile(jsonStr, filename, "application/json");
+        return;
+      }
+      await triggerDownload(dataUrl, filename, "application/json");
+    }
+
+    function importBackup(event) {
+      if (!isAdmin()) return;
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const list = Array.isArray(parsed) ? parsed : (parsed.projects || []);
+          const blobs = parsed.pdfBlobs || {};
+          if (!Array.isArray(list)) throw new Error("Format tidak valid");
+          if (!confirm("Timpa seluruh data saat ini dengan file backup JSON?")) return;
+          for (const [docId, dataUrl] of Object.entries(blobs)) {
+            await savePdfBlobData(docId, dataUrl);
+          }
+          projects = migrateProjects(list);
+          save();
+          state.projectId = null;
+          state.unitId = null;
+          render();
+          alert("Data project, unit, foto, dan dokumen PDF berhasil dipulihkan!");
+        } catch (err) {
+          alert("File JSON tidak valid atau rusak.");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    function esc(str) {
+      return String(str || "").replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
